@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: ads-digital-twin
+    runtime: python
+    branch: main
+    rootDir: backend
+    plan: free
+    buildCommand: python -m pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
+    startCommand: gunicorn app:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
