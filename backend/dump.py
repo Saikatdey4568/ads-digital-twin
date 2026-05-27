@@ -1,21 +1,21 @@
 import pandas as pd
 import numpy as np
 from typing import Dict, Any
-import logging
-
-
-logger = logging.getLogger(__name__)
 
 
 def run_simulation(df: pd.DataFrame, params) -> pd.DataFrame:
     """
-    ADS Digital Twin Simulator with Trip Completion Detection.
-    
-    Now properly marks trip_complete = 1 when a full trip ends (mirrors main.py logic).
+    ADS Digital Twin Simulator.
+
+    Key fix: avg_pressure is PRESERVED from original telemetry
+    and only slightly modified by pump activity.
+    current_pressure is also preserved — not recalculated from zero.
+
+    Only dosing_amount, pump_status, and tank_level are actively simulated.
     """
 
     sim = df.copy()
-    n = len(sim)
+    n   = len(sim)
 
     # ── Pydantic model → dict ──────────────────────────────────────────────
     if hasattr(params, "model_dump"):
@@ -56,24 +56,19 @@ def run_simulation(df: pd.DataFrame, params) -> pd.DataFrame:
     rpm_arr      = sim["rpm"].values.astype(float)
     curr_p_arr   = sim["current_pressure"].values.astype(float)
     master_p_arr = sim["master_pressure"].values.astype(float)
-    orig_avg_p   = sim["avg_pressure"].values.astype(float)
+    orig_avg_p   = sim["avg_pressure"].values.astype(float)     # PRESERVE THIS
     direction_arr= sim["direction"].values.astype(float)
 
     # ── Output arrays ─────────────────────────────────────────────────────
     sim_dosing = np.zeros(n)
     sim_pump   = np.zeros(n)
     sim_tank   = sim["tank_level"].values.copy().astype(float)
+
+    # KEY FIX: start avg_pressure from original values, not zeros
     sim_avg_p  = orig_avg_p.copy()
     sim_curr_p = curr_p_arr.copy()
 
-    # ── NEW: Trip Tracking ────────────────────────────────────────────────
-    sim["trip_complete"] = 0
-    sim["current_trip_id"] = 0
-    current_trip_id = 0
-    in_active_trip = False
-    trip_start_idx = -1
-
-    # ── Pressure window ───────────────────────────────────────────────────
+    # ── Pressure window (matches firmware PWindow/AWindow) ─────────────────
     pwin = max(1, Prev_PWindow_size)
     awin = max(1, Prev_AWindow_size)
     p_window = []
@@ -83,7 +78,7 @@ def run_simulation(df: pd.DataFrame, params) -> pd.DataFrame:
     last_dose_idx     = -9999
     stop_dosing_start = 0
     STOP_DOSING_ACTIVE= False
-    ROW_SECONDS       = 65
+    ROW_SECONDS       = 65   # each row ≈ publish_time seconds
 
     # ── Main loop ──────────────────────────────────────────────────────────
     for i in range(n):
@@ -93,18 +88,23 @@ def run_simulation(df: pd.DataFrame, params) -> pd.DataFrame:
         orig_ap   = orig_avg_p[i]
         tank      = float(sim_tank[i])
 
-        # Pressure window
+        # Pressure window — mirrors firmware running_pressure_average()
         p_window.append(orig_ap)
         if len(p_window) > pwin:
             p_window.pop(0)
         running_avg = float(np.mean(p_window[-awin:]))
 
+        # KEY FIX:
+        # Use the windowed average of the ORIGINAL avg_pressure
+        # Do NOT replace with cp (which may be 0/sparse).
+        # Only add a tiny pump boost when dosing.
         pump_boost   = sim_pump[i - 1] * 0.8 if i > 0 else 0.0
         sim_avg_p[i] = float(np.clip(
             running_avg + pump_boost + np.random.normal(0, 0.05),
             Prev_min_pressure, Prev_max_pressure
         ))
 
+        # Current pressure — preserve original, clip to configured range
         sim_curr_p[i] = float(np.clip(
             cp + np.random.normal(0, 0.1),
             Prev_min_pressure, Prev_max_pressure
@@ -112,33 +112,24 @@ def run_simulation(df: pd.DataFrame, params) -> pd.DataFrame:
 
         pressure_diff = cp - mp
 
+        # ── State detection ────────────────────────────────────────────────
         in_load    = load_rpm_min    <= rpm <= load_rpm_max
         in_transit = transit_rpm_min <= rpm <= transit_rpm_max and rpm > 0
         is_idle    = running_avg < idle_pressure
 
-        # ── Trip State Management (Mirrors main.py) ───────────────────────
-        if is_idle:
-            # Potential trip completion
-            if in_active_trip:
-                # Mark trip as completed when returning to IDLE after transit
-                current_trip_id += 1
-                sim.loc[i, "trip_complete"] = 1
-                sim.loc[i, "current_trip_id"] = current_trip_id
-                in_active_trip = False
-                logger.info(f"Trip Completed - ID: {current_trip_id} at row {i}")
-        else:
-            # We are in a non-idle state → potential trip
-            if not in_active_trip:
-                in_active_trip = True
-                trip_start_idx = i
+        # Reset trip on transit
+        if in_transit:
+            trip_dose_total   = 0.0
+            STOP_DOSING_ACTIVE= False
 
-        # ── Dosing logic (unchanged) ─────────────────────────────────────
+        # ── Dosing decision ────────────────────────────────────────────────
         if is_idle:
             sim_pump[i] = 0
         elif in_load and not is_idle:
-            min_gap = max(1, int(dosing_decide_time / ROW_SECONDS))
-            rows_since = i - last_dose_idx
+            min_gap  = max(1, int(dosing_decide_time / ROW_SECONDS))
+            rows_since= i - last_dose_idx
 
+            # stop_dosing_time check
             if STOP_DOSING_ACTIVE:
                 if (i - stop_dosing_start) * ROW_SECONDS > stop_dosing_time:
                     STOP_DOSING_ACTIVE = False
@@ -153,6 +144,8 @@ def run_simulation(df: pd.DataFrame, params) -> pd.DataFrame:
             )
 
             if can_dose:
+                # Dose volume = dose_amount * flow_pulse * flow_factor / 1000
+                # Mirrors firmware: helpin.pulse_to_litre()
                 dose_vol = dose_amount * (flow_pulse * flow_factor / 1000.0)
                 dose_vol = min(dose_vol, dosing_amt_per_trip - trip_dose_total)
 
@@ -182,9 +175,6 @@ def run_simulation(df: pd.DataFrame, params) -> pd.DataFrame:
     sim["dosing_amount"]    = np.round(sim_dosing, 4)
     sim["pump_status"]      = sim_pump
     sim["tank_level"]       = np.clip(np.round(sim_tank, 3), 0, 30)
-
-    # Fill trip id forward for better visualization
-    sim["current_trip_id"] = sim["current_trip_id"].replace(0, method='ffill').fillna(0).astype(int)
 
     sim.replace([np.inf, -np.inf], 0, inplace=True)
     sim.fillna(0, inplace=True)

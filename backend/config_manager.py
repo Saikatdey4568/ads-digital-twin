@@ -34,9 +34,9 @@ class SimulationConfig(BaseModel):
     idle_pressure: float = 5.0
     non_idle_pressure: float = 5.0
     idle_time: float = 300.0
-    non_zero_time: float = 600.0
-    master_pressure_time: float = 600.0
-    transit_time: float = 60.0
+    non_zero_time: float = 1200.0
+    master_pressure_time: float = 900.0
+    transit_time: float = 600.0
     dosing_decide_time: float = 300.0
     stop_dosing_time: float = 10800.0
     publish_time: float = 65.0

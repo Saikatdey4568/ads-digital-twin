@@ -1,6 +1,8 @@
-@tailwind base;
+/* stylelint-disable at-rule-no-unknown */
+@tailwind base;   
 @tailwind components;
 @tailwind utilities;
+/* stylelint-enable at-rule-no-unknown */
 
 :root {
   --neon-cyan: #00f5ff;
@@ -27,7 +29,7 @@
 .font-display { font-family: 'Rajdhani', 'Orbitron', sans-serif; }
 .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-/* Sidebar slider */
+/* ── Range Slider ─────────────────────────────────────────────────────── */
 input[type=range] {
   -webkit-appearance: none;
   appearance: none;
@@ -56,7 +58,18 @@ input[type=range]::-moz-range-thumb {
   box-shadow: 0 0 6px var(--neon-cyan);
 }
 
-/* Neon glow text */
+/* ── Number Input (slider value box) ─────────────────────────────────── */
+input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ── Neon text ────────────────────────────────────────────────────────── */
 .neon-text {
   color: var(--neon-cyan);
   text-shadow: 0 0 10px rgba(0, 245, 255, 0.7), 0 0 20px rgba(0, 245, 255, 0.3);
@@ -65,17 +78,26 @@ input[type=range]::-moz-range-thumb {
   color: var(--neon-blue);
   text-shadow: 0 0 10px rgba(0, 128, 255, 0.7);
 }
+.neon-green {
+  color: var(--neon-green);
+  text-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
+}
+.neon-orange {
+  color: var(--neon-orange);
+}
+.neon {
+  color: var(--neon-cyan);
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.6);
+}
 
-/* Graph panel glow border */
+/* ── Graph panel ─────────────────────────────────────────────────────── */
 .graph-panel {
   border: 1px solid #1a2744;
   box-shadow: 0 0 20px rgba(0, 128, 255, 0.05), inset 0 0 40px rgba(0, 0, 0, 0.3);
 }
 
-/* Scan line overlay effect */
-.scanlines {
-  position: relative;
-}
+/* ── Scan lines overlay ───────────────────────────────────────────────── */
+.scanlines { position: relative; }
 .scanlines::after {
   content: '';
   position: absolute;
@@ -91,7 +113,7 @@ input[type=range]::-moz-range-thumb {
   z-index: 1;
 }
 
-/* Button styles */
+/* ── Buttons ──────────────────────────────────────────────────────────── */
 .btn-run {
   background: linear-gradient(135deg, #1a8a00, #39ff14);
   color: #000;
@@ -108,6 +130,35 @@ input[type=range]::-moz-range-thumb {
   transform: translateY(-1px);
 }
 .btn-run:active { transform: translateY(0); }
+.btn-run:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-deploy {
+  background: linear-gradient(135deg, #003580, #0080ff);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 0 15px rgba(0, 128, 255, 0.35);
+}
+.btn-deploy:hover {
+  box-shadow: 0 0 25px rgba(0, 128, 255, 0.6);
+  transform: translateY(-1px);
+}
+.btn-deploy:active { transform: translateY(0); }
+.btn-deploy:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
 
 .btn-reset {
   background: #0d1224;
@@ -125,7 +176,21 @@ input[type=range]::-moz-range-thumb {
   box-shadow: 0 0 10px rgba(0, 245, 255, 0.2);
 }
 
-/* Upload button */
+.btn-secondary {
+  background: #0d1224;
+  color: #e0eaff;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid #1a2744;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-secondary:hover {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+}
+
 .btn-upload {
   background: #0d1224;
   color: var(--neon-cyan);
@@ -139,30 +204,95 @@ input[type=range]::-moz-range-thumb {
   box-shadow: 0 0 10px rgba(0, 245, 255, 0.15);
 }
 
-/* Pulsing dot */
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; box-shadow: 0 0 4px #39ff14; }
-  50% { opacity: 0.4; box-shadow: none; }
+.btn-preset {
+  background: #0d1224;
+  color: #4a6080;
+  border: 1px solid #1a2744;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
 }
-.pulse-dot {
-  animation: pulse-dot 1.5s infinite;
+.btn-preset:hover {
+  border-color: var(--neon-orange);
+  color: var(--neon-orange);
 }
 
-/* Section separator */
+/* ── Section header ───────────────────────────────────────────────────── */
+.section-hdr {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--neon-blue);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+/* ── Pulsing dot ──────────────────────────────────────────────────────── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 4px #39ff14; }
+  50%       { opacity: 0.4; box-shadow: none; }
+}
+.pulse-dot { animation: pulse-dot 1.5s infinite; }
+.pulse     { animation: pulse-dot 1.5s infinite; }
+
+/* ── Section divider ─────────────────────────────────────────────────── */
 .section-divider {
   border-color: #1a2744;
   margin: 8px 0;
 }
 
-/* Loading spinner */
+/* ── Loading spinner ──────────────────────────────────────────────────── */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 .spinner {
-  width: 16px; height: 16px;
+  width: 16px;
+  height: 16px;
   border: 2px solid #1a2744;
   border-top-color: var(--neon-cyan);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   display: inline-block;
+}
+
+/* ── Toast notifications ──────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  max-width: 380px;
+  cursor: pointer;
+  animation: slideIn 0.25s ease;
+}
+.toast.success {
+  background: rgba(57, 255, 20, 0.12);
+  border: 1px solid rgba(57, 255, 20, 0.4);
+  color: #39ff14;
+}
+.toast.error {
+  background: rgba(255, 34, 68, 0.12);
+  border: 1px solid rgba(255, 34, 68, 0.4);
+  color: #ff6080;
+}
+.toast.warning {
+  background: rgba(255, 107, 0, 0.12);
+  border: 1px solid rgba(255, 107, 0, 0.4);
+  color: #ff6b00;
+}
+.toast.info {
+  background: rgba(0, 128, 255, 0.12);
+  border: 1px solid rgba(0, 128, 255, 0.4);
+  color: #60aaff;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
 }

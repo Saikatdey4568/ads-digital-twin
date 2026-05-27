@@ -62,14 +62,14 @@ export const SLIDER_DEFS = [
   {
     section: 'PRESSURE TRIGGER',
     params: [
-      { key: 'idle_pressure',     label: 'Idle Pressure (Bar)',     min: 0, max: 30, step: 0.5 },
-      { key: 'non_idle_pressure', label: 'Non-Idle Pressure (Bar)', min: 0, max: 30, step: 0.5 },
+      { key: 'idle_pressure',     label: 'Idle Pressure (Bar)',     min: 0, max: 100, step: 0.5 },
+      { key: 'non_idle_pressure', label: 'Non-Idle Pressure (Bar)', min: 0, max: 100, step: 0.5 },
     ]
   },
   {
     section: 'TIMING LOGIC',
     params: [
-      { key: 'idle_time',            label: 'Idle Time (s)',            min: 10,  max: 3600,  step: 10 },
+      { key: 'idle_time',            label: 'Idle Time (s)',            min: 10,  max: 1000,  step: 10 },
       { key: 'non_zero_time',        label: 'Non Zero Time (s)',        min: 10,  max: 3600,  step: 10 },
       { key: 'master_pressure_time', label: 'Master Pressure Time (s)', min: 60,  max: 7200,  step: 60 },
       { key: 'transit_time',         label: 'Transit Time (s)',         min: 10,  max: 600,   step: 10 },

@@ -3,12 +3,13 @@ import SliderControl from './SliderControl'
 import { SLIDER_DEFS } from '../api/params'
 import { listPresets, loadPreset, savePreset, deletePreset } from '../api'
 
+
 export default function Sidebar({
   params, onChange, onUpload, onRun, onDeploy, onReset,
   loading, deploying, fileName, deviceEvent, onToast
 }) {
   const fileRef = useRef()
-  const [collapsed, setCollapsed] = useState({})
+  const [collapsed, setCollapsed] = useState({}) 
   const [presets, setPresets]     = useState([])
   const [showPresets, setShowPresets] = useState(false)
   const [presetName, setPresetName]   = useState('')
