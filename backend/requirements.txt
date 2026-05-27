@@ -1,7 +1,6 @@
 fastapi==0.111.0
 uvicorn[standard]==0.29.0
 gunicorn==23.0.0
-pip
 setuptools
 wheel
 numpy==1.26.4
